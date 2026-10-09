@@ -13,4 +13,13 @@
       state: started
       enabled: yes
 
-#  - name: connect to mysql server
+  - name: connect to mysql server
+    ansible..mysql.mysql_info:
+      login_user: root
+      login_password: ExpenseApp@1
+      login_host: mysql.svrk.fun
+    register: mysql_info
+
+  - name: print the output
+    ansible.builtin.debug:
+      msg: "MySQL info: {{ mysql_info }}" 
