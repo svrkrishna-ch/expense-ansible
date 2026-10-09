@@ -10,8 +10,11 @@
 
   - name: install nodejs
     ansible.builtin.package:
-      name: nodejs
+      name: "{{ item }}"
       state: present
+      loop:
+      - nodejs
+      - mysql
 
   - name: create the user 'expense'
     ansible.builtin.user:
@@ -22,7 +25,7 @@
      path: /app
      state: directory
 
-  - name: install backend code
+  - name: download backend code
     ansible.builtin.get_url:
       url: https://expense-builds.s3.us-east-1.amazonaws.com/expense-backend-v2.zip
       dest: /tmp/backend.zip
@@ -37,3 +40,24 @@
     community.general.npm:
       name: npm
       path: /app
+
+  - name: copy backend service
+    ansible.builtin.copy:
+      src: backend.service
+      dest: /etc/systemd/system/backend.service
+
+  - name: import mysql data
+    ansible.mysql.mysql_db:
+      state: import
+      name: all
+      login_user: root
+      login_password: ExpenseApp@1
+      login_host: mysql.svrk.fun
+      target: /app/schema/backend.sql
+
+  - name: enable, restart & deamon reload service
+    ansible.builtin.systemd_service:
+      name: backend
+      state: restarted
+      deamon_reload: true
+      enabled: true
